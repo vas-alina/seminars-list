@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSeminarActions } from "../../hooks/useSeminarActions";
 import { ErrorText, MainContainer } from "../../styles/MainPage";
 import { AddSeminar } from "./components/AddSeminar";
@@ -11,20 +11,12 @@ function MainPage() {
     changeSeminar,
     deleteSeminar,
     error,
-    fetchSeminars,
     isLoading,
     seminars,
-    updateAddSeminars,
-    updateDeleteSeminars,
-    updateChangeSeminars,
   } = useSeminarActions();
   const [editedSeminar, setEditedSeminar] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [actionType, setActionType] = useState("edit");
-
-  useEffect(() => {
-    fetchSeminars();
-  }, [updateChangeSeminars, updateDeleteSeminars, updateAddSeminars]);
 
   const handleAddSeminar = (newSeminar) => {
     addSeminar(newSeminar);
@@ -59,7 +51,7 @@ function MainPage() {
   return (
     <MainContainer>
       {isLoading && <p>Загрузка...</p>}
-      {error && <ErrorText>Ошибка: {error}</ErrorText>}
+      {error && <ErrorText>Ошибка: {error.message}</ErrorText>}
       <AddSeminar onAddSeminar={handleAddSeminar} />
       <SeminarList
         seminars={seminars}

@@ -1,105 +1,69 @@
-import { useEffect, useState } from "react"
 
-const API_URL = "http://localhost:3000/seminars"
+import { useEffect, useState } from "react"
+import { addSeminar, changeSeminar, deleteSeminar, fetchSeminars } from "../api";
 
 export const useSeminarActions = () => {
     const [seminars, setSeminars] = useState([]);
-    const [updateAddSeminars, setUpdateAddSeminars] = useState(false);
-    const [updateDeleteSeminars, setUpdateDeleteSeminars] = useState(false);
-    const [updateChangeSeminars, setUpdateChangeSeminars] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const fetchSeminars = () => {
+
+    const loadSeminars = async () => {
         setIsLoading(true);
-        fetch(API_URL)
-            .then((response) => response.json())
-            .then((loadedSeminars) => {
-                setSeminars(loadedSeminars);
-                setIsLoading(false);
-            })
-            .catch((error) => {
-                console.error("Ошибка при загрузке списка мероприятий: ", error);
-                setError(error);
-                setIsLoading(false);
-            })
-    }
+        try {
+            const loadedSeminars = await fetchSeminars();
+            setSeminars(loadedSeminars);
+        } catch (error) {
+            console.error('Ошибка при загрузке списка мероприятий:', error);
+            setError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetchSeminars()
+        loadSeminars();
     }, []);
 
-    const addSeminar = (seminar) => {
-        fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json;charset=utf-8' },
-            body: JSON.stringify(seminar),
-        })
-            .then((response) => {
-
-                if (!response.ok) {
-                    throw new Error("Ошибка при добавлении мероприятия");
-                }
-                return response.json();
-            })
-            .then((response) => {
-                console.log("Новое мероприятие добавлена! Ответ сервера:", response);
-                setUpdateAddSeminars(!updateAddSeminars);
-            })
-            .catch((error) => {
-                error(error.message);
-                setError(error);
-            })
-            .finally(() => {
-            });
+    const handleAddSeminar = async (seminar) => {
+        try {
+            const response = await addSeminar(seminar);
+            console.log('Новое мероприятие добавлено! Ответ сервера:', response);
+            loadSeminars(); 
+        } catch (error) {
+            console.error(error.message);
+            setError(error);
+        }
     };
 
-    const deleteSeminar = (id) => {
-        setUpdateDeleteSeminars(true)
-        fetch(`${API_URL}/${id}`, {
-            method: 'DELETE',
-        })
-            .then((rawResponse) => rawResponse.json())
-            .then((response) => {
-                console.log(` Удалено, ответ сервера: `, response);
-                setUpdateDeleteSeminars(!updateDeleteSeminars);
-            })
-            .catch((error) => {
-                console.error('Ошибка удаления мероприятия:', error);
-                setError(error);
-            })
-            .finally(() => setUpdateDeleteSeminars(false));
+    const handleDeleteSeminar = async (id) => {
+        try {
+            const response = await deleteSeminar(id);
+            console.log('Удалено, ответ сервера:', response);
+            loadSeminars(); 
+        } catch (error) {
+            console.error('Ошибка удаления мероприятия:', error);
+            setError(error);
+        }
     };
 
-    const changeSeminar = (id, newData) => {
-        setUpdateChangeSeminars(true);
-        fetch(`${API_URL}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newData),
-        })
-            .then((response) => response.json())
-            .then((responseData) => {
-                console.log('Изменено:', responseData);
-            })
-            .catch((error) => {
-                console.error('Ошибка изменения мероприятия:', error);
-                setError(error);
-            })
-
-            .finally(() => setUpdateChangeSeminars(false));
+    const handleChangeSeminar = async (id, newData) => {
+        try {
+            const response = await changeSeminar(id, newData);
+            console.log('Изменено:', response);
+            loadSeminars(); 
+        } catch (error) {
+            console.error('Ошибка изменения мероприятия:', error);
+            setError(error);
+        }
     };
 
     return {
-        addSeminar,
-        changeSeminar,
-        deleteSeminar,
-        fetchSeminars,
-        error,
-        isLoading,
         seminars,
-        setSeminars,
-        updateAddSeminars,
-        updateDeleteSeminars,
-        updateChangeSeminars,
-        setUpdateChangeSeminars
+        isLoading,
+        error,
+        addSeminar: handleAddSeminar,
+        deleteSeminar: handleDeleteSeminar,
+        changeSeminar: handleChangeSeminar,
     };
-}
+};
+
